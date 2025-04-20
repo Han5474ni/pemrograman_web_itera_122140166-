@@ -1,6 +1,7 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import BookForm from './BookForm';
+import { renderWithProvider } from '../test/setup';
 
 describe('BookForm', () => {
   const mockSubmit = vi.fn();
@@ -23,11 +24,17 @@ describe('BookForm', () => {
   it('shows validation errors for empty fields', async () => {
     render(<BookForm onSubmit={mockSubmit} />);
     
+    const titleInput = screen.getByLabelText(/judul buku/i);
+    const authorInput = screen.getByLabelText(/penulis/i);
+    
+    fireEvent.blur(titleInput);
+    fireEvent.blur(authorInput);
+    
     const submitButton = screen.getByRole('button', { name: /tambah buku/i });
     fireEvent.click(submitButton);
 
-    expect(await screen.findByText(/judul buku wajib diisi/i)).toBeInTheDocument();
-    expect(await screen.findByText(/nama penulis wajib diisi/i)).toBeInTheDocument();
+    expect(await screen.findByText('Judul buku wajib diisi')).toBeInTheDocument();
+    expect(await screen.findByText('Nama penulis wajib diisi')).toBeInTheDocument();
     expect(mockSubmit).not.toHaveBeenCalled();
   });
 
@@ -38,7 +45,7 @@ describe('BookForm', () => {
     fireEvent.change(titleInput, { target: { value: 'a' } });
     fireEvent.blur(titleInput);
 
-    expect(await screen.findByText(/judul buku minimal 2 karakter/i)).toBeInTheDocument();
+    expect(await screen.findByText('Judul buku minimal 2 karakter')).toBeInTheDocument();
   });
 
   it('validates author name format', async () => {
@@ -48,10 +55,20 @@ describe('BookForm', () => {
     fireEvent.change(authorInput, { target: { value: '123' } });
     fireEvent.blur(authorInput);
 
-    expect(await screen.findByText(/nama penulis hanya boleh mengandung huruf dan spasi/i)).toBeInTheDocument();
+    expect(await screen.findByText('Nama penulis hanya boleh mengandung huruf dan spasi')).toBeInTheDocument();
   });
 
-  it('submits form with valid data', () => {
+  it('validates author name with only letters and spaces', async () => {
+    render(<BookForm onSubmit={mockSubmit} />);
+    
+    const authorInput = screen.getByLabelText(/penulis/i);
+    fireEvent.change(authorInput, { target: { value: 'John123' } });
+    fireEvent.blur(authorInput);
+
+    expect(await screen.findByText('Nama penulis hanya boleh mengandung huruf dan spasi')).toBeInTheDocument();
+  });
+
+  it('submits form with valid data', async () => {
     render(<BookForm onSubmit={mockSubmit} />);
     
     const titleInput = screen.getByLabelText(/judul buku/i);
@@ -64,11 +81,40 @@ describe('BookForm', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /tambah buku/i }));
 
-    expect(mockSubmit).toHaveBeenCalledWith({
-      title: 'Test Book',
-      author: 'John Doe',
-      status: 'dibaca'
+    await waitFor(() => {
+      expect(mockSubmit).toHaveBeenCalledWith({
+        title: 'Test Book',
+        author: 'John Doe',
+        status: 'dibaca'
+      });
     });
+  });
+
+  it('clears form after successful submission', async () => {
+    render(<BookForm onSubmit={mockSubmit} />);
+    
+    const titleInput = screen.getByLabelText(/judul buku/i);
+    const authorInput = screen.getByLabelText(/penulis/i);
+
+    fireEvent.change(titleInput, { target: { value: 'Test Book' } });
+    fireEvent.change(authorInput, { target: { value: 'John Doe' } });
+
+    const submitButton = screen.getByRole('button', { name: /tambah buku/i });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(titleInput).toHaveValue('');
+      expect(authorInput).toHaveValue('');
+    });
+  });
+
+  it('handles form cancellation', () => {
+    render(<BookForm onSubmit={mockSubmit} onCancel={mockCancel} />);
+    
+    const cancelButton = screen.getByRole('button', { name: /batal/i });
+    fireEvent.click(cancelButton);
+
+    expect(mockCancel).toHaveBeenCalled();
   });
 
   it('handles edit mode correctly', () => {

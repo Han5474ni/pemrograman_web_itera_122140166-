@@ -1,6 +1,7 @@
-import { render, screen, act } from '@testing-library/react';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { render, screen, act, fireEvent } from '@testing-library/react';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { BookProvider, useBooks } from './BookContext';
+import { renderWithProvider } from '../test/setup';
 
 describe('BookContext', () => {
   const TestComponent = () => {
@@ -21,12 +22,52 @@ describe('BookContext', () => {
     );
   };
 
+  const mockBook = {
+    title: 'Test Book',
+    author: 'Test Author',
+    status: 'dimiliki'
+  };
+
   beforeEach(() => {
     localStorage.clear();
   });
 
   afterEach(() => {
     localStorage.clear();
+  });
+
+  it('allows user to add a new book', async () => {
+    renderWithProvider(<TestComponent />);
+    
+    const addButton = screen.getByText('Add Book');
+    fireEvent.click(addButton);
+
+    expect(await screen.findByText('Test Book')).toBeInTheDocument();
+    expect(localStorage.setItem).toHaveBeenCalled();
+  });
+
+  it('allows user to update book status', async () => {
+    localStorage.getItem.mockReturnValue(JSON.stringify([{ ...mockBook, id: '1' }]));
+    
+    renderWithProvider(<TestComponent />);
+    const updateButton = screen.getByText('Update Book');
+    
+    await act(async () => {
+      fireEvent.click(updateButton);
+    });
+
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      'books',
+      expect.stringContaining('"status":"dibaca"')
+    );
+  });
+
+  it('persists books between sessions', () => {
+    localStorage.getItem.mockReturnValue(JSON.stringify([mockBook]));
+    renderWithProvider(<TestComponent />);
+    
+    expect(screen.getByTestId('book-count')).toHaveTextContent('1');
+    expect(localStorage.getItem).toHaveBeenCalledWith('books');
   });
 
   it('provides initial empty books state', () => {
