@@ -43,12 +43,11 @@ npm run build
 ## Screenshot Antarmuka
 
 ### Halaman Utama
-![Halaman Utama](screenshots/home.png)
-*Tampilan halaman utama dengan daftar buku dan form penambahan*
+![image](https://github.com/user-attachments/assets/ff0f3cbd-8b49-45d6-81ae-944d91aa205f)
+![image](https://github.com/user-attachments/assets/13917984-3a64-4bde-b7e2-e6d0b1bdd309)
 
 ### Halaman Statistik
-![Halaman Statistik](screenshots/stats.png)
-*Tampilan halaman statistik koleksi buku*
+![image](https://github.com/user-attachments/assets/8fb66756-af17-4c3b-88e7-ce1e3028cfab)
 
 ## Fitur React yang Digunakan
 
@@ -99,10 +98,6 @@ describe('BookForm', () => {
 });
 ```
 
-## Screenshot Hasil Testing
-![Hasil Testing](screenshots/test-results.png)
-*Screenshot hasil running test suite*
-
 ## Komentar Kode
 
 Beberapa bagian penting dalam kode telah diberi komentar untuk memudahkan pemahaman:
@@ -118,9 +113,3 @@ useEffect(() => {
   }
 }, []);
 ```
-
-## Kontribusi
-Kontribusi selalu diterima. Silakan buat pull request untuk perbaikan atau penambahan fitur.
-
-## Lisensi
-MIT License
